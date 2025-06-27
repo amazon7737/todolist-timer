@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>todo</title>
+    <style>
+      body {
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+      .container {
+        width: 100%;
+        max-width: 500px;
+        margin-top: 40px;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+        border-radius: 16px;
+        padding: 32px 24px 24px 24px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+      .gauge-bar {
+        flex: 1;
+        height: 16px;
+        background: #eee;
+        border-radius: 8px;
+        margin-right: 16px;
+        overflow: hidden;
+        position: relative;
+      }
+      .gauge-fill {
+        height: 100%;
+        background: #4caf50;
+        width: 0%;
+        transition: width 0.3s;
+      }
+      .total-time {
+        min-width: 60px;
+        text-align: right;
+        font-weight: bold;
+        color: #333;
+      }
+      .todo-list-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 12px;
+      }
+      .todo-list-title {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: inherit;
+      }
+      .add-btn {
+        background: #e3f2fd;
+        color: #1565c0;
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        font-size: 1.5em;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+        box-shadow: none;
+      }
+      .add-btn:hover {
+        background: #bbdefb;
+      }
+      .todo-list {
+        width: 100%;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .todo-item {
+        background: #fff;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        cursor: grab;
+        transition: box-shadow 0.2s;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+      }
+      .todo-item.dragging {
+        opacity: 0.5;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      }
+      .todo-checkbox {
+        margin-right: 12px;
+        width: 18px;
+        height: 18px;
+      }
+      .todo-title {
+        flex: 1;
+        font-size: 1.1em;
+        transition: color 0.2s;
+        color: inherit;
+      }
+      .todo-title.completed {
+        text-decoration: line-through;
+        color: #aaa;
+      }
+      .todo-item.selected {
+        background: #fff;
+      }
+      .todo-title.running {
+        color: #1565c0 !important;
+      }
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        display: none;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-content {
+        background: #fff;
+        border-radius: 16px;
+        padding: 40px 36px 32px 36px;
+        min-width: 900px;
+        max-width: 900px;
+        min-height: 500px;
+        box-shadow: 0 2px 24px rgba(0, 0, 0, 0.13);
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .modal-content input,
+      .modal-content textarea {
+        width: 100%;
+        padding: 16px 12px;
+        border-radius: 8px;
+        border: 1.5px solid #90caf9;
+        font-size: 1.15em;
+        background: #fff;
+        margin-bottom: 0;
+        box-sizing: border-box;
+      }
+      .modal-content textarea {
+        min-height: 350px;
+        resize: none;
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 1em;
+        cursor: pointer;
+        background: #fff;
+        color: #1565c0;
+        border: 1.5px solid #90caf9;
+        transition: background 0.2s;
+        font-weight: 500;
+        box-shadow: none;
+      }
+      .btn.cancel {
+        background: #fff;
+        color: #1976d2;
+        border: 1.5px solid #bbdefb;
+      }
+      .btn:hover:not(.cancel) {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+      .todo-detail {
+        width: 100%;
+        margin-top: 24px;
+        background: #f5f5f5;
+        border-radius: 10px;
+        padding: 20px 18px;
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .todo-detail.active {
+        display: flex;
+      }
+      .detail-title {
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+      .detail-desc {
+        color: #555;
+        font-size: 1em;
+      }
+      .timer {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #1565c0;
+      }
+      .detail-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .detail-actions .btn {
+        flex: 1;
+      }
+      @media (max-width: 600px) {
+        .container {
+          max-width: 98vw;
+          padding: 12px 4vw 16px 4vw;
+        }
+        .modal-content {
+          min-width: 98vw;
+          max-width: 98vw;
+          min-height: 90vh;
+        }
+      }
+      .del-btn {
+        color: #d32f2f;
+      }
+      .del-btn:hover {
+        color: #b71c1c;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="total-time" id="totalTime">00:00:00</div>
+      </div>
+      <div class="todo-list-header">
+        <span class="todo-list-title">투두리스트</span>
+        <button class="add-btn" id="addBtn">+</button>
+      </div>
+      <ul class="todo-list" id="todoList">
+        <!-- 투두 아이템이 여기에 렌더링됨 -->
+      </ul>
+      <!-- 상세 모달로 이동 -->
+      <div class="modal" id="detailModal">
+        <div class="modal-content">
+          <div class="detail-title" id="detailTitle"></div>
+          <div class="detail-desc" id="detailDesc"></div>
+          <div class="timer" id="detailTimer">00:00:00</div>
+          <div class="detail-actions">
+            <button class="btn" id="startBtn">작업 시작</button>
+            <button class="btn" id="pauseBtn">일시 중지</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="modal">
+      <div class="modal-content">
+        <h3>투두리스트 추가</h3>
+        <input type="text" id="modalTitle" placeholder="제목" />
+        <textarea id="modalDesc" rows="3" placeholder="설명"></textarea>
+        <div class="modal-actions">
+          <button class="btn cancel" id="modalCancel">취소</button>
+          <button class="btn" id="modalAdd">추가</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      // LocalStorage helpers
+      const TODOS_KEY = "todolist-special-todos";
+      function saveTodos() {
+        localStorage.setItem(TODOS_KEY, JSON.stringify(todos));
+      }
+      function loadTodos() {
+        const data = localStorage.getItem(TODOS_KEY);
+        if (data) {
+          try {
+            return JSON.parse(data);
+          } catch {
+            return [];
+          }
+        }
+        return [];
+      }
+
+      // 투두리스트 데이터
+      let todos = loadTodos();
+      let selectedTodoId = null;
+      let timerInterval = null;
+      // runningTodoId는 running 상태의 todo가 있으면 그 id로 초기화
+      let runningTodoId = (() => {
+        const running = todos.find((t) => t.status === "running");
+        return running ? running.id : null;
+      })();
+
+      // DOM
+      const todoList = document.getElementById("todoList");
+      const addBtn = document.getElementById("addBtn");
+      const modal = document.getElementById("modal");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalDesc = document.getElementById("modalDesc");
+      const modalCancel = document.getElementById("modalCancel");
+      const modalAdd = document.getElementById("modalAdd");
+      const detailModal = document.getElementById("detailModal");
+      const detailTitle = document.getElementById("detailTitle");
+      const detailDesc = document.getElementById("detailDesc");
+      const detailTimer = document.getElementById("detailTimer");
+      const startBtn = document.getElementById("startBtn");
+      const pauseBtn = document.getElementById("pauseBtn");
+      const totalTime = document.getElementById("totalTime");
+
+      // 유틸
+      function formatTime(sec) {
+        const h = String(Math.floor(sec / 3600)).padStart(2, "0");
+        const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+        const s = String(sec % 60).padStart(2, "0");
+        return `${h}:${m}:${s}`;
+      }
+
+      // 투두 렌더링
+      function renderTodos() {
+        todoList.innerHTML = "";
+        todos.forEach((todo, idx) => {
+          const li = document.createElement("li");
+          let liClass = "todo-item";
+          if (todo.id === selectedTodoId) liClass += " selected";
+          li.className = liClass;
+          li.setAttribute("draggable", "true");
+          li.setAttribute("data-id", todo.id);
+          li.setAttribute("data-idx", idx);
+
+          // 드래그 앤 드롭 이벤트
+          li.addEventListener("dragstart", handleDragStart);
+          li.addEventListener("dragover", handleDragOver);
+          li.addEventListener("drop", handleDrop);
+          li.addEventListener("dragend", handleDragEnd);
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "todo-checkbox";
+          checkbox.checked = todo.completed;
+          checkbox.addEventListener("change", (e) => {
+            todo.completed = checkbox.checked;
+            renderTodos();
+            saveTodos();
+          });
+
+          const span = document.createElement("span");
+          let spanClass = "todo-title";
+          if (todo.completed) spanClass += " completed";
+          if (todo.status === "running" && todo.id === runningTodoId) spanClass += " running";
+          span.className = spanClass;
+          span.textContent = todo.title;
+          span.addEventListener("click", () => {
+            showDetail(todo.id);
+          });
+
+          // X(삭제) 버튼
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "✕";
+          delBtn.className = "del-btn";
+          delBtn.style.marginLeft = "12px";
+          delBtn.style.background = "none";
+          delBtn.style.border = "none";
+          delBtn.style.color = "#d32f2f";
+          delBtn.style.fontSize = "1.2em";
+          delBtn.style.cursor = "pointer";
+          delBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (confirm("정말 삭제하시겠습니까?")) {
+              if (todo.id === runningTodoId) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                runningTodoId = null;
+              }
+              todos.splice(idx, 1);
+              renderTodos();
+              updateTotalTime();
+              saveTodos();
+            }
+          });
+
+          li.appendChild(checkbox);
+          li.appendChild(span);
+          li.appendChild(delBtn);
+          todoList.appendChild(li);
+        });
+        saveTodos();
+      }
+
+      // 드래그 앤 드롭
+      let dragSrcIdx = null;
+      function handleDragStart(e) {
+        dragSrcIdx = +e.currentTarget.getAttribute("data-idx");
+        e.currentTarget.classList.add("dragging");
+      }
+      function handleDragOver(e) {
+        e.preventDefault();
+      }
+      function handleDrop(e) {
+        e.preventDefault();
+        const targetIdx = +e.currentTarget.getAttribute("data-idx");
+        if (dragSrcIdx !== null && dragSrcIdx !== targetIdx) {
+          const moved = todos.splice(dragSrcIdx, 1)[0];
+          todos.splice(targetIdx, 0, moved);
+          renderTodos();
+        }
+        dragSrcIdx = null;
+      }
+      function handleDragEnd(e) {
+        e.currentTarget.classList.remove("dragging");
+      }
+
+      // 모달
+      addBtn.addEventListener("click", () => {
+        modal.classList.add("active");
+        modalTitle.value = "";
+        modalDesc.value = "";
+        modalTitle.focus();
+      });
+      modalCancel.addEventListener("click", () => {
+        modal.classList.remove("active");
+      });
+      modalAdd.addEventListener("click", () => {
+        const title = modalTitle.value.trim();
+        const desc = modalDesc.value.trim();
+        if (!title) {
+          alert("제목을 입력하세요.");
+          return;
+        }
+        todos.push({
+          id: Date.now(),
+          title,
+          desc,
+          completed: false,
+          time: 0,
+          status: "idle", // idle, running, paused, completed
+        });
+        modal.classList.remove("active");
+        renderTodos();
+        saveTodos();
+      });
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.classList.remove("active");
+      });
+
+      // 상세 보기 (모달로)
+      function showDetail(id) {
+        const todo = todos.find((t) => t.id === id);
+        if (!todo) return;
+        selectedTodoId = id;
+        detailTitle.textContent = todo.title;
+        detailDesc.textContent = todo.desc;
+        detailTimer.textContent = formatTime(todo.time);
+        detailModal.classList.add("active");
+        updateDetailButtons(todo);
+      }
+      function hideDetail() {
+        detailModal.classList.remove("active");
+        selectedTodoId = null;
+      }
+      // 모달 바깥 클릭시 닫기
+      detailModal.addEventListener("click", (e) => {
+        if (e.target === detailModal) hideDetail();
+      });
+
+      // 타이머
+      function startTimer(todo) {
+        if (timerInterval) clearInterval(timerInterval);
+        runningTodoId = todo.id;
+        todo.status = "running";
+        saveTodos(); // runningTodoId와 status 저장
+        timerInterval = setInterval(() => {
+          const runningTodo = todos.find((t) => t.id === runningTodoId);
+          if (runningTodo && runningTodo.status === "running") {
+            runningTodo.time += 1;
+            if (detailModal.classList.contains("active") && selectedTodoId === runningTodoId) {
+              detailTimer.textContent = formatTime(runningTodo.time);
+            }
+            updateTotalTime();
+            renderTodos();
+            saveTodos(); // 시간도 저장
+          } else {
+            clearInterval(timerInterval);
+            timerInterval = null;
+          }
+        }, 1000);
+      }
+      function pauseTimer(todo) {
+        todo.status = "paused";
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        runningTodoId = null;
+        saveTodos();
+      }
+      function updateDetailButtons(todo) {
+        startBtn.disabled = todo.status === "running";
+        pauseBtn.disabled = todo.status !== "running";
+      }
+      startBtn.addEventListener("click", () => {
+        const todo = todos.find((t) => t.id === selectedTodoId);
+        if (!todo) return;
+        if (todos.some((t) => t.status === "running" && t.id !== todo.id)) {
+          alert("이미 작업중인 할 일이 있습니다. 한 번에 하나만 작업할 수 있습니다.");
+          return;
+        }
+        if (todo.status !== "running") {
+          startTimer(todo);
+          updateDetailButtons(todo);
+          renderTodos();
+        }
+      });
+      pauseBtn.addEventListener("click", () => {
+        const todo = todos.find((t) => t.id === selectedTodoId);
+        if (!todo) return;
+        if (todo.id !== runningTodoId) return;
+        if (todo.status === "running") {
+          pauseTimer(todo);
+          updateDetailButtons(todo);
+          renderTodos();
+        }
+      });
+
+      // 총 작업 시간 및 게이지
+      function updateTotalTime() {
+        const total = todos.reduce((sum, t) => sum + t.time, 0);
+        totalTime.textContent = formatTime(total);
+      }
+
+      // 초기 렌더
+      renderTodos();
+      updateTotalTime();
+
+      // 페이지 로드 시 running 상태 복구
+      if (runningTodoId) {
+        const runningTodo = todos.find((t) => t.id === runningTodoId);
+        if (runningTodo && runningTodo.status === "running") {
+          startTimer(runningTodo);
+        }
+      }
+
+      // 페이지 이탈 시 타이머 정리
+      window.addEventListener("beforeunload", () => {
+        if (timerInterval) clearInterval(timerInterval);
+      });
+    </script>
+  </body>
+</html>
