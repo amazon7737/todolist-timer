@@ -13,25 +13,28 @@
         min-height: 100vh;
         margin: 0;
         font-family: "Segoe UI", Arial, sans-serif;
+        justify-content: center;
       }
       .container {
         width: 100%;
-        max-width: 500px;
-        margin-top: 40px;
-        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
-        border-radius: 16px;
-        padding: 32px 24px 24px 24px;
+        max-width: 700px;
+        margin: 48px auto 0 auto;
+        box-shadow: 0 4px 32px rgba(0, 0, 0, 0.1);
+        border-radius: 24px;
+        padding: 48px 40px 36px 40px;
         background: #fff;
         display: flex;
         flex-direction: column;
         align-items: center;
+        min-height: 600px;
       }
       .header {
         width: 100%;
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: space-between;
-        margin-bottom: 24px;
+        justify-content: center;
+        margin-bottom: 32px;
       }
       .gauge-bar {
         flex: 1;
@@ -50,21 +53,24 @@
       }
       .total-time {
         min-width: 60px;
-        text-align: right;
+        text-align: center;
         font-weight: bold;
         color: #333;
+        font-size: 1.2em;
+        margin-bottom: 8px;
       }
       .todo-list-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        margin-bottom: 12px;
+        margin-bottom: 20px;
       }
       .todo-list-title {
         font-size: 1.3em;
         font-weight: bold;
         color: inherit;
+        letter-spacing: 0.02em;
       }
       .add-btn {
         background: #e3f2fd;
@@ -89,39 +95,47 @@
         list-style: none;
         padding: 0;
         margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
       }
       .todo-item {
         background: #fff;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        padding: 12px 16px;
+        border-radius: 14px;
+        padding: 18px 22px;
         display: flex;
         align-items: center;
         cursor: grab;
-        transition: box-shadow 0.2s;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        transition: box-shadow 0.2s, border 0.2s;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        border: 1.5px solid #f0f0f0;
       }
       .todo-item.dragging {
         opacity: 0.5;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        background: #fff !important;
+        border: 1.5px solid #f0f0f0 !important;
       }
       .todo-checkbox {
-        margin-right: 12px;
-        width: 18px;
-        height: 18px;
+        margin-right: 16px;
+        width: 20px;
+        height: 20px;
       }
       .todo-title {
         flex: 1;
-        font-size: 1.1em;
+        font-size: 1.15em;
         transition: color 0.2s;
         color: inherit;
+        font-weight: 500;
+        letter-spacing: 0.01em;
       }
       .todo-title.completed {
         text-decoration: line-through;
         color: #aaa;
       }
       .todo-item.selected {
-        background: #fff;
+        background: #fff !important;
+        border: 1.5px solid #f0f0f0 !important;
       }
       .todo-title.running {
         color: #1565c0 !important;
@@ -153,6 +167,22 @@
         display: flex;
         flex-direction: column;
         gap: 24px;
+        position: relative;
+      }
+      .modal-close {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        background: none;
+        border: none;
+        font-size: 2em;
+        color: #aaa;
+        cursor: pointer;
+        z-index: 10;
+        transition: color 0.2s;
+      }
+      .modal-close:hover {
+        color: #1976d2;
       }
       .modal-content input,
       .modal-content textarea {
@@ -232,8 +262,9 @@
       }
       @media (max-width: 600px) {
         .container {
-          max-width: 98vw;
-          padding: 12px 4vw 16px 4vw;
+          max-width: 99vw;
+          padding: 8vw 2vw 8vw 2vw;
+          min-width: 0;
         }
         .modal-content {
           min-width: 98vw;
@@ -264,12 +295,34 @@
       <!-- 상세 모달로 이동 -->
       <div class="modal" id="detailModal">
         <div class="modal-content">
+          <button class="modal-close" id="detailCloseBtn" title="닫기">×</button>
           <div class="detail-title" id="detailTitle"></div>
           <div class="detail-desc" id="detailDesc"></div>
           <div class="timer" id="detailTimer">00:00:00</div>
           <div class="detail-actions">
             <button class="btn" id="startBtn">작업 시작</button>
             <button class="btn" id="pauseBtn">일시 중지</button>
+            <button class="btn" id="editBtn">수정</button>
+          </div>
+          <div
+            class="edit-form"
+            id="editForm"
+            style="display: none; flex-direction: column; gap: 12px; margin-top: 10px"
+          >
+            <input
+              id="editTitle"
+              type="text"
+              style="font-size: 1.1em; padding: 8px; border-radius: 6px; border: 1px solid #90caf9"
+            />
+            <textarea
+              id="editDesc"
+              rows="4"
+              style="font-size: 1em; padding: 8px; border-radius: 6px; border: 1px solid #90caf9"
+            ></textarea>
+            <div style="display: flex; gap: 8px; justify-content: flex-end">
+              <button class="btn" id="editSaveBtn">저장</button>
+              <button class="btn cancel" id="editCancelBtn">취소</button>
+            </div>
           </div>
         </div>
       </div>
@@ -328,6 +381,15 @@
       const startBtn = document.getElementById("startBtn");
       const pauseBtn = document.getElementById("pauseBtn");
       const totalTime = document.getElementById("totalTime");
+      const editBtn = document.getElementById("editBtn");
+      const editForm = document.getElementById("editForm");
+      const editTitle = document.getElementById("editTitle");
+      const editDesc = document.getElementById("editDesc");
+      const editSaveBtn = document.getElementById("editSaveBtn");
+      const editCancelBtn = document.getElementById("editCancelBtn");
+      const detailCloseBtn = document.getElementById("detailCloseBtn");
+
+      let editingTodoId = null;
 
       // 유틸
       function formatTime(sec) {
@@ -470,7 +532,7 @@
         if (!todo) return;
         selectedTodoId = id;
         detailTitle.textContent = todo.title;
-        detailDesc.textContent = todo.desc;
+        detailDesc.innerHTML = todo.desc.replace(/\n/g, "<br>");
         detailTimer.textContent = formatTime(todo.time);
         detailModal.classList.add("active");
         updateDetailButtons(todo);
@@ -564,6 +626,55 @@
       // 페이지 이탈 시 타이머 정리
       window.addEventListener("beforeunload", () => {
         if (timerInterval) clearInterval(timerInterval);
+      });
+
+      // 상세 모달 수정 기능
+      editBtn.addEventListener("click", () => {
+        const todo = todos.find((t) => t.id === selectedTodoId);
+        if (!todo) return;
+        editingTodoId = todo.id;
+        editTitle.value = todo.title;
+        editDesc.value = todo.desc;
+        editForm.style.display = "flex";
+        detailTitle.style.display = "none";
+        detailDesc.style.display = "none";
+        editBtn.style.display = "none";
+        startBtn.style.display = "none";
+        pauseBtn.style.display = "none";
+        detailTimer.style.display = "none";
+      });
+      editCancelBtn.addEventListener("click", () => {
+        editForm.style.display = "none";
+        detailTitle.style.display = "block";
+        detailDesc.style.display = "block";
+        editBtn.style.display = "inline-block";
+        startBtn.style.display = "inline-block";
+        pauseBtn.style.display = "inline-block";
+        detailTimer.style.display = "block";
+      });
+      editSaveBtn.addEventListener("click", () => {
+        const todo = todos.find((t) => t.id === editingTodoId);
+        if (!todo) return;
+        todo.title = editTitle.value.trim();
+        todo.desc = editDesc.value;
+        editForm.style.display = "none";
+        detailTitle.style.display = "block";
+        detailDesc.style.display = "block";
+        editBtn.style.display = "inline-block";
+        startBtn.style.display = "inline-block";
+        pauseBtn.style.display = "inline-block";
+        detailTimer.style.display = "block";
+        renderTodos();
+        saveTodos();
+        showDetail(todo.id);
+      });
+
+      // 상세 모달 닫기 버튼 및 ESC 키
+      detailCloseBtn.addEventListener("click", hideDetail);
+      window.addEventListener("keydown", (e) => {
+        if (detailModal.classList.contains("active") && e.key === "Escape") {
+          hideDetail();
+        }
       });
     </script>
   </body>
