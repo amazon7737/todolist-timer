@@ -297,6 +297,9 @@
     <div class="container">
       <div class="header">
         <div class="total-time" id="totalTime">00:00:00</div>
+        <button class="btn" id="resetAllTimeBtn" style="margin-left: 12px; min-width: 90px">
+          전체 시간 초기화
+        </button>
       </div>
       <div class="todo-list-header">
         <button class="add-btn" id="addBtn">+</button>
@@ -315,6 +318,7 @@
             <button class="btn" id="startBtn">작업 시작</button>
             <button class="btn" id="pauseBtn">일시 중지</button>
             <button class="btn" id="editBtn">수정</button>
+            <button class="btn" id="resetTimeBtn">시간 초기화</button>
           </div>
           <div
             class="edit-form"
@@ -400,6 +404,8 @@
       const editSaveBtn = document.getElementById("editSaveBtn");
       const editCancelBtn = document.getElementById("editCancelBtn");
       const detailCloseBtn = document.getElementById("detailCloseBtn");
+      const resetTimeBtn = document.getElementById("resetTimeBtn");
+      const resetAllTimeBtn = document.getElementById("resetAllTimeBtn");
 
       let editingTodoId = null;
 
@@ -723,6 +729,27 @@
       window.addEventListener("keydown", (e) => {
         if (detailModal.classList.contains("active") && e.key === "Escape") {
           hideDetail();
+        }
+      });
+
+      // 시간 초기화 버튼
+      resetTimeBtn.addEventListener("click", () => {
+        const todo = todos.find((t) => t.id === selectedTodoId);
+        if (!todo) return;
+        todo.time = 0;
+        renderTodos();
+        updateTotalTime();
+        saveTodos();
+        detailTimer.textContent = formatTime(0);
+      });
+
+      // 전체 시간 초기화 버튼
+      resetAllTimeBtn.addEventListener("click", () => {
+        if (confirm("전체 초기화 하시겠습니까?")) {
+          todos.forEach((t) => (t.time = 0));
+          renderTodos();
+          updateTotalTime();
+          saveTodos();
         }
       });
     </script>
