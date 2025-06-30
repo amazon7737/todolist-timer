@@ -102,6 +102,16 @@
         gap: 18px;
         position: relative;
       }
+      .todo-item-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .todo-checkbox {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
       .todo-item {
         background: #fff;
         border-radius: 14px;
@@ -114,6 +124,7 @@
         box-shadow: none;
         border: 1.5px solid #f0f0f0;
         z-index: 1;
+        flex: 1;
       }
       .todo-item.dragging {
         opacity: 0.5;
@@ -128,11 +139,6 @@
         border: 2.5px dashed #bbb !important;
         min-height: 48px;
         transition: background 0.18s, border 0.18s;
-      }
-      .todo-checkbox {
-        margin-right: 16px;
-        width: 20px;
-        height: 20px;
       }
       .todo-title {
         flex: 1;
@@ -421,6 +427,10 @@
       function renderTodos() {
         todoList.innerHTML = "";
         todos.forEach((todo, idx) => {
+          // Create wrapper for checkbox and todo item
+          const wrapper = document.createElement("div");
+          wrapper.className = "todo-item-wrapper";
+
           const li = document.createElement("li");
           let liClass = "todo-item";
           if (todo.id === selectedTodoId) liClass += " selected";
@@ -507,10 +517,18 @@
             }
           });
 
-          li.appendChild(checkbox);
+          // Add checkbox to wrapper
+          wrapper.appendChild(checkbox);
+
+          // Add content to todo item
           li.appendChild(span);
           li.appendChild(delBtn);
-          todoList.appendChild(li);
+
+          // Add todo item to wrapper
+          wrapper.appendChild(li);
+
+          // Add wrapper to todo list
+          todoList.appendChild(wrapper);
         });
         saveTodos();
       }
